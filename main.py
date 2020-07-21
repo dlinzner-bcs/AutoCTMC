@@ -9,7 +9,7 @@ from ctmc.ctmc import ctmc
 
 
 if __name__ == '__main__':
-    T = 20
+    T = 21
     D = 5
     Q = np.random.gamma(shape =1.0,scale=1.0,size=(D,D))
     for i in range(0,D):
