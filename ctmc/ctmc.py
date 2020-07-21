@@ -89,7 +89,7 @@ class ctmc():
            f = self.backward_ode(ti,rho0)
            assert f.status == 0
            rho0 = np.multiply(f.y[:,-1],z[:,i]).flatten()
-           rho0 = rho0/sum(rho0)
+           #rho0 = rho0/sum(rho0)
            rho = np.concatenate((rho,f.y),axis = 1)
            times = np.concatenate((times, np.flip(f.t,axis=0)), axis=0)
         return (np.delete(rho,0,axis=1),np.delete(times,0,axis=0))

@@ -50,7 +50,7 @@ if __name__ == '__main__':
     plt.plot(t, y[3, :])
     plt.show()
 
-    times = np.array([0,1,2,3,5, 10])
+    times = np.array([3,5, 10,15,18])
     z = np.random.gamma(shape =1.0,scale=1.0,size=(5,6))
     (y,t) = mc.backward_ode_post(times, z)
     plt.figure(3)
