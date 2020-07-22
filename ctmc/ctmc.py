@@ -138,11 +138,9 @@ class ctmc():
                 M[z[i][1],z[i+1][1]] = M[z[i][1],z[i+1][1]] + 1
         return T,M
 
-    def expected_statistics(self, y,t_y,rho,t_rho):
+    def expected_statistics(self, y,t_y,rho,t_rho,Q):
         eT = np.zeros((self.dims,1))
         eM = np.zeros((self.dims,self.dims))
-
-        Q = self.Q
 
         def M_t(t,i,j):
             h = interp1d(t_y, y[i, :])
@@ -167,8 +165,8 @@ class ctmc():
         self.dwell = self.dwell + T
         return None
 
-    def update_estatistics(self, y,t_y,rho,t_rho):
-        eT,eM = self.expected_statistics(y,t_y,rho,t_rho)
+    def update_estatistics(self, y,t_y,rho,t_rho,Q):
+        eT,eM = self.expected_statistics(y,t_y,rho,t_rho,Q)
         self.trans = self.trans + eM
         self.dwell = self.dwell + eT
         return None
@@ -178,6 +176,8 @@ class ctmc():
         for i in range(0,self.dims):
             for j in range(0, self.dims):
                 Q_estimate[i,j] = (self.trans[i,j]+self.alpha)/(self.dwell[i]+self.beta)
+            Q_estimate[i,i]=0
+            Q_estimate[i, i] = -sum(Q_estimate[i, :])
         self.Q_estimate = Q_estimate
         return None
 

@@ -94,13 +94,11 @@ if __name__ == '__main__':
     t_y = sol.t
 
 
-    eT,eM = mc.expected_statistics( y, t_y, rho, t_rho)
-    mc.update_estatistics(y, t_y, rho, t_rho)
-
-
     mc.reset_stats()
+    mc.estimate_Q()
+    a = copy.copy(mc.Q_estimate)
 
-    M = 20
+    M = 100
     err = np.zeros((M, 1))
     for k in range(0, M):
         p0 = np.ones((1, D)).flatten()
@@ -124,13 +122,12 @@ if __name__ == '__main__':
         sol = mc.forward_ode_post(t_rho, rho)
         y = sol.y
         t_y = sol.t
-        mc.update_estatistics(y, t_y, rho, t_rho)
+        mc.update_estatistics(y, t_y, rho, t_rho,a)
         mc.estimate_Q()
 
         a = copy.copy(mc.Q_estimate)
         b = copy.copy(mc.Q)
-        np.fill_diagonal(a, 0)
-        np.fill_diagonal(b, 0)
+        print(np.linalg.norm(a - b))
         err[k] = np.linalg.norm(a - b)
 
     plt.figure(11)
