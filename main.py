@@ -118,8 +118,8 @@ if __name__ == '__main__':
                 for j in range(0, mc.dims):
                     lh[j, i] = obs_lh(z[i][1], j)
 
-        (rho, t_rho) = mc.backward_ode_post(t_lh, lh)
-        sol = mc.forward_ode_post(t_rho, rho)
+        (rho, t_rho) = mc.backward_ode_post_marginal(t_lh, lh)
+        sol = mc.forward_ode_post_marginal(t_rho, rho)
         y = sol.y
         t_y = sol.t
         mc.update_estatistics(y, t_y, rho, t_rho,a)

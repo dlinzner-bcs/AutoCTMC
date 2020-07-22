@@ -82,8 +82,36 @@ class ctmc():
         sol = solve_ivp(lambda t, y: mastereq_t(t,y), [0, self.T], self.p0, dense_output=True)
         return sol
 
+    def forward_ode_post_marginal(self,t_rho,rho):
+        Q = self.Q_estimate
+        Q_eff = copy.copy(Q)
+        def mastereq_t(t, x):
+            for i in range(0,self.dims):
+                for j in range(0, self.dims):
+                    if t<=np.max(t_rho):
+                        f = interp1d(t_rho, rho[i,:])
+                        g = interp1d(t_rho, rho[j,:])
+                        fac = (g(t)+epsilon)/(f(t)+epsilon)
+                    else:
+                        fac = 1
+                    Q_eff[i,j] = Q[i,j]*fac
+                Q_eff[i,i]=0
+                Q_eff[i,i]=-sum(Q_eff[i,:])
+            dxdt =  np.dot(x,Q_eff)
+            return dxdt
+        sol = solve_ivp(lambda t, y: mastereq_t(t,y), [0, self.T], self.p0, dense_output=True)
+        return sol
+
     def backward_ode(self, t,rho0):
         Q = self.Q
+        def mastereq_bwd(t, x):
+            dxdt = np.dot(Q,x)
+            return dxdt
+        sol = solve_ivp(mastereq_bwd, t,rho0,dense_output=True)
+        return sol
+
+    def backward_ode_marginal(self, t,rho0):
+        Q = self.Q_estimate
         def mastereq_bwd(t, x):
             dxdt = np.dot(Q,x)
             return dxdt
@@ -101,6 +129,24 @@ class ctmc():
         for i in range(0,t.shape[0]-1):
            ti = np.array([T-t[i+1],T-t[i]])
            f = self.backward_ode(ti,rho0)
+           assert f.status == 0
+           rho0 = np.multiply(f.y[:,-1],z[:,i]).flatten()
+           rho0 = rho0/sum(rho0)
+           rho = np.concatenate((rho,f.y),axis = 1)
+           times = np.concatenate((times, np.flip(f.t,axis=0)), axis=0)
+        return (np.delete(rho,0,axis=1),np.delete(times,0,axis=0))
+
+    def backward_ode_post_marginal(self, t,z):
+        T = self.T
+
+        t = np.concatenate((t, T*np.ones((1))))+1
+        z = np.concatenate((z, np.ones((self.dims,1))), axis=1)
+        rho0 = np.ones((1,self.dims)).flatten()
+        rho  = np.ones((self.dims,1))
+        times = np.ones((1,))
+        for i in range(0,t.shape[0]-1):
+           ti = np.array([T-t[i+1],T-t[i]])
+           f = self.backward_ode_marginal(ti,rho0)
            assert f.status == 0
            rho0 = np.multiply(f.y[:,-1],z[:,i]).flatten()
            rho0 = rho0/sum(rho0)
