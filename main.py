@@ -6,7 +6,7 @@ from scipy.stats import norm
 
 
 def obs(x):
-    y = np.random.normal(x,1)
+    y = np.random.normal(loc = x,scale = 1)
     return y
 def obs_lh(x,mu):
     y = obs(x)
@@ -28,12 +28,14 @@ if __name__ == '__main__':
     z = mc.sample()
     t_lh = np.array([0])
     t0 = 0
-    lh = np.zeros((mc.dims,len(z)))
+    lh = np.ones((mc.dims,len(z)))
+    p=0.5
     for i in range(0, len(z)):
         t0 = t0 + z[i][0]
-        t_lh = np.concatenate((t_lh,t0*np.ones((1))))
-        for j in range(0,mc.dims):
-            lh[j,i] = obs_lh(z[i][1],j)
+        if np.random.uniform(low=0,high=1)<p:
+          t_lh = np.concatenate((t_lh,t0*np.ones((1))))
+          for j in range(0,mc.dims):
+             lh[j,i] = obs_lh(z[i][1],j)
     print(t_lh)
     print(lh)
 
@@ -43,7 +45,6 @@ if __name__ == '__main__':
 
 
     z = mc.sample()
-
 
     times = np.array([0 ,T])
     sol = mc.backward_ode(times,p0)
