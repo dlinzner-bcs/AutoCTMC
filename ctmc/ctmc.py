@@ -144,21 +144,21 @@ class ctmc():
 
         Q = self.Q
 
-        def M_t(t,x):
+        def M_t(t,i,j):
+            h = interp1d(t_y, y[i, :])
             if t <= np.max(t_rho):
                 f = interp1d(t_rho, rho[i, :])
                 g = interp1d(t_rho, rho[j, :])
-                h = f = interp1d(t_y, y[i, :])
-                fac = h(t) * ((g(t) + epsilon) / (f(t) + epsilon))
+                fac =  ((g(t) + epsilon) / (f(t) + epsilon))
             else:
                 fac = 1
-            Q_eff = x * fac
+            Q_eff = Q[i,j] * fac*h(t)
             return Q_eff
 
         for i in range(0, self.dims):
             eT[i] = np.trapz(y[i,:],t_y)
             for j in range(0, self.dims):
-                eM[i,j] = quad(M_t, 0, self.T,args=(Q[i,j]))[0]
+                eM[i,j] = quad(M_t, 0, self.T,args=(i,j))[0]
         return eT,eM
 
     def update_statistics(self, z):
@@ -185,4 +185,9 @@ class ctmc():
 
     def set_init(self,p0):
         self.p0 = p0
+        return None
+
+    def reset_stats(self):
+        self.trans = self.trans*0
+        self.dwell = self.dwell*0
         return None
