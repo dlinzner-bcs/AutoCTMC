@@ -32,7 +32,9 @@ class ctmc():
             raise ValueError('invalid initial state. try normalizing')
         self.p0   = p0
 
-
+    def emit(self, func, **kwargs):
+        func(self, **kwargs)  ## added self here
+        return self
 
     def compute_propagator(self, dt):
         return spl.expm(self.Q * dt)
@@ -79,22 +81,25 @@ class ctmc():
         return sol
 
     def backward_ode_post(self, t,z):
-        T = t[-1]
+        T = self.T
+
+        t = np.concatenate((t, T*np.ones((1))))+1
+        z = np.concatenate((z, np.ones((self.dims,1))), axis=1)
         rho0 = np.ones((1,self.dims)).flatten()
         rho  = np.ones((self.dims,1))
         times = np.ones((1,))
         for i in range(0,t.shape[0]-1):
            ti = np.array([T-t[i+1],T-t[i]])
-           print(ti)
            f = self.backward_ode(ti,rho0)
            assert f.status == 0
            rho0 = np.multiply(f.y[:,-1],z[:,i]).flatten()
-           #rho0 = rho0/sum(rho0)
+           rho0 = rho0/sum(rho0)
            rho = np.concatenate((rho,f.y),axis = 1)
            times = np.concatenate((times, np.flip(f.t,axis=0)), axis=0)
         return (np.delete(rho,0,axis=1),np.delete(times,0,axis=0))
 
-    def sample(self, T):
+    def sample(self):
+        T = self.T
         idx = np.arange(0,self.dims)
         Q   = self.Q
         t   = 0
@@ -109,8 +114,9 @@ class ctmc():
            s    = np.random.multinomial(1,p,size=None)
            s    = sum(s*idx)
            tau  = np.random.exponential(-1/Q[s, s])
-           z    = z    +   ((tau,s),)
-           t    = t    + tau
+           t = t + tau
+           if t  <= T:
+                z    = z    +   ((tau,s),)
         return z
 
     def statistics(self, z):
