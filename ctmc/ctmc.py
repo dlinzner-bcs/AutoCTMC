@@ -17,7 +17,7 @@ class ctmc():
     Q   = intensity matrix
     p0  = inital state
     """
-    def __init__(self, Q,p0,alpha,beta,T):
+    def __init__(self, Q,p0,alpha,beta,T,dt):
         super().__init__()
         self.T    = T
         self.dims = p0.shape[0]
@@ -41,6 +41,7 @@ class ctmc():
         self.trans = np.zeros((self.dims,self.dims))
         self.dwell = np.zeros((self.dims,1))
         self.Q_estimate = np.zeros((self.dims,self.dims))
+        self.dt = dt
 
     def emit(self, func, **kwargs):
         func(self, **kwargs)  ## added self here
@@ -85,13 +86,19 @@ class ctmc():
     def forward_ode_post_marginal(self,t_rho,rho):
         Q = self.Q_estimate
         Q_eff = copy.copy(Q)
+        p0 = np.ones((1,self.dims)).flatten()
+        p0 = p0/sum(p0)
         def mastereq_t(t, x):
             for i in range(0,self.dims):
                 for j in range(0, self.dims):
                     if t<=np.max(t_rho):
-                        f = interp1d(t_rho, rho[i,:])
-                        g = interp1d(t_rho, rho[j,:])
-                        fac = (g(t)+epsilon)/(f(t)+epsilon)
+                       f0 = interp1d(t_rho, rho[i,:])
+                       # g = interp1d(t_rho, rho[j,:])
+                       # fac = (g(t)+epsilon)/(f(t)+epsilon)
+                       result = np.where(t_rho <= t)
+                       f = rho[i, result[0][0]]
+                       g = rho[j, result[0][0]]
+                       fac = ((g + epsilon) / (f + epsilon))
                     else:
                         fac = 1
                     Q_eff[i,j] = Q[i,j]*fac
@@ -99,7 +106,11 @@ class ctmc():
                 Q_eff[i,i]=-sum(Q_eff[i,:])
             dxdt =  np.dot(x,Q_eff)
             return dxdt
-        sol = solve_ivp(lambda t, y: mastereq_t(t,y), [0, self.T], self.p0, dense_output=True)
+
+        n_span = np.ceil(self.T / self.dt)
+        np.ceil(n_span)
+        t_span = np.linspace(0, self.T, int(n_span))
+        sol = solve_ivp(lambda t, y: mastereq_t(t,y), [0, self.T], p0,t_eval=t_span, dense_output=True)
         return sol
 
     def backward_ode(self, t,rho0):
@@ -107,7 +118,11 @@ class ctmc():
         def mastereq_bwd(t, x):
             dxdt = np.dot(Q,x)
             return dxdt
-        sol = solve_ivp(mastereq_bwd, t,rho0,dense_output=True)
+
+        n_span = (t[1] - t[0]) / self.dt
+        np.ceil(n_span)
+        t_span = np.linspace(np.asscalar(t[0]), np.asscalar(t[1]), int(n_span))
+        sol = solve_ivp(mastereq_bwd, t,rho0,t_eval=t_span,dense_output=True)
         return sol
 
     def backward_ode_marginal(self, t,rho0):
@@ -115,7 +130,10 @@ class ctmc():
         def mastereq_bwd(t, x):
             dxdt = np.dot(Q,x)
             return dxdt
-        sol = solve_ivp(mastereq_bwd, t,rho0,dense_output=True)
+        n_span = np.ceil((t[1]-t[0])/self.dt)
+        np.ceil(n_span)
+        t_span = np.linspace(np.asscalar(t[0]),np.asscalar(t[1]),int(n_span))
+        sol = solve_ivp(mastereq_bwd, t,rho0,t_eval=t_span,dense_output=True)
         return sol
 
     def backward_ode_post(self, t,z):
@@ -189,20 +207,27 @@ class ctmc():
         eM = np.zeros((self.dims,self.dims))
 
         def M_t(t,i,j):
-            h = interp1d(t_y, y[i, :])
+            result = np.where(t_y <= t)
+            h = y[i, result[0][0]]
+           # h = interp1d(t_y, y[i, :])
             if t <= np.max(t_rho):
-                f = interp1d(t_rho, rho[i, :])
-                g = interp1d(t_rho, rho[j, :])
-                fac =  ((g(t) + epsilon) / (f(t) + epsilon))
+                result = np.where(t_rho<=t)
+                f = rho[i, result[0][0]]
+                g = rho[j, result[0][0]]
+                #f = interp1d(t_rho, rho[i, :])
+               # g = interp1d(t_rho, rho[j, :])
+                #fac =  ((g(t) + epsilon) / (f(t) + epsilon))
+                fac = ((g + epsilon) / (f + epsilon))
             else:
                 fac = 1
-            Q_eff = Q[i,j] * fac*h(t)
+            Q_eff = Q[i,j] * fac*h
             return Q_eff
 
         for i in range(0, self.dims):
             eT[i] = np.trapz(y[i,:],t_y)
             for j in range(0, self.dims):
-                eM[i,j] = quad(M_t, 0, self.T,args=(i,j))[0]
+                f = np.multiply(y[i,:],np.divide(rho[j,0:len(y[i,:])],rho[i,0:len(y[i,:])]))
+                eM[i,j] = Q[i,j]*np.trapz(f,t_y)
         return eT,eM
 
     def update_statistics(self, z):
@@ -222,7 +247,7 @@ class ctmc():
         for i in range(0,self.dims):
             for j in range(0, self.dims):
                 Q_estimate[i,j] = (self.trans[i,j]+self.alpha)/(self.dwell[i]+self.beta)
-            Q_estimate[i,i]=0
+            Q_estimate[i, i] = 0
             Q_estimate[i, i] = -sum(Q_estimate[i, :])
         self.Q_estimate = Q_estimate
         return None
@@ -231,6 +256,12 @@ class ctmc():
 
     def set_init(self,p0):
         self.p0 = p0
+        return None
+
+    def rand_init(self):
+        p0 = np.random.uniform(low=0, high=1,size=(1,self.dims)).flatten()
+        p0 = p0 / sum(p0)
+        self.set_init(p0)
         return None
 
     def reset_stats(self):
