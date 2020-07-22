@@ -6,20 +6,20 @@ from scipy.stats import norm
 import copy
 
 def obs(x):
-    y = np.random.normal(loc = x,scale = 1)
+    y = np.random.normal(loc = x,scale = 0.1)
     return y
 def obs_lh(x,mu):
     y = obs(x)
-    pyx = norm.pdf(y,loc = mu, scale = 1)
+    pyx = norm.pdf(y,loc = mu, scale = 0.1)
     return pyx
 
 if __name__ == '__main__':
     T = 31
-    dt = 0.005
+    dt = 0.0005
     D = 2
     alpha = 1
     beta  = 1
-    Q = np.random.gamma(shape =4.0,scale=1.0,size=(D,D))
+    Q = np.random.gamma(shape =.5,scale=1.0,size=(D,D))
     for i in range(0,D):
         Q[i,i] = 0
         Q[i, i] = -sum(Q[i, :])
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     plt.figure(4)
     plt.plot(t_y, y[0, :])
     plt.plot(t_y, y[1, :])
-
+    plt.show()
 
     mc.reset_stats()
     mc.estimate_Q()
@@ -107,12 +107,10 @@ if __name__ == '__main__':
         y = sol.y
         t_y = sol.t
 
-
-
         mc.update_estatistics(y, t_y, rho, t_rho,a)
         mc.estimate_Q()
 
-        a = copy.copy(mc.Q_estimate)
+        a = copy.deepcopy(mc.Q_estimate)
         b = copy.copy(mc.Q)
         a0 = copy.deepcopy(mc.Q_estimate)
         b = copy.copy(mc.Q)
