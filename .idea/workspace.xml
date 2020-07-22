@@ -13,11 +13,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="106">
-              <caret line="134" column="13" selection-start-line="134" selection-start-column="13" selection-end-line="134" selection-end-column="13" />
+            <state relative-caret-position="331">
+              <caret line="118" column="27" selection-start-line="118" selection-start-column="27" selection-end-line="118" selection-end-column="27" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
               </folding>
@@ -25,11 +25,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ctmc/ctmc.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-975">
-              <caret line="169" column="10" lean-forward="true" selection-start-line="169" selection-start-column="10" selection-end-line="169" selection-end-column="10" />
+            <state relative-caret-position="-1466">
+              <caret line="84" column="49" lean-forward="true" selection-start-line="84" selection-start-column="49" selection-end-line="84" selection-end-column="49" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -141,23 +141,22 @@
       <updated>1595347608545</updated>
       <workItem from="1595347611340" duration="811000" />
       <workItem from="1595349018384" duration="10973000" />
-      <workItem from="1595419295337" duration="5447000" />
+      <workItem from="1595419295337" duration="8655000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="17231000" />
+    <option name="totallyTimeSpent" value="20439000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="169" y="82" width="1541" height="832" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.21347564" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.13675784" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.4445946" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.35540542" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -181,28 +180,28 @@
     <option name="version" value="1" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/ctmc_nonparametric$main.coverage" NAME="main Coverage Results" MODIFIED="1595424760092" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ctmc_nonparametric$main.coverage" NAME="main Coverage Results" MODIFIED="1595428004260" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/main.py">
+    <entry file="file://$PROJECT_DIR$/ctmc/ctmc.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="106">
-          <caret line="134" column="13" selection-start-line="134" selection-start-column="13" selection-end-line="134" selection-end-column="13" />
+        <state relative-caret-position="-1466">
+          <caret line="84" column="49" lean-forward="true" selection-start-line="84" selection-start-column="49" selection-end-line="84" selection-end-column="49" />
           <folding>
-            <element signature="e#0#37#0" expanded="true" />
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ctmc/ctmc.py">
+    <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-975">
-          <caret line="169" column="10" lean-forward="true" selection-start-line="169" selection-start-column="10" selection-end-line="169" selection-end-column="10" />
+        <state relative-caret-position="331">
+          <caret line="118" column="27" selection-start-line="118" selection-start-column="27" selection-end-line="118" selection-end-column="27" />
           <folding>
-            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#0#37#0" expanded="true" />
           </folding>
         </state>
       </provider>

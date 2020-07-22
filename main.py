@@ -14,12 +14,12 @@ def obs_lh(x,mu):
     return pyx
 
 if __name__ == '__main__':
-    T = 21
+    T = 31
     dt = 0.005
-    D = 3
+    D = 2
     alpha = 1
     beta  = 1
-    Q = np.random.gamma(shape =1.0,scale=1.0,size=(D,D))
+    Q = np.random.gamma(shape =4.0,scale=1.0,size=(D,D))
     for i in range(0,D):
         Q[i,i] = 0
         Q[i, i] = -sum(Q[i, :])
@@ -43,10 +43,7 @@ if __name__ == '__main__':
     print(lh)
 
 
-    dt = 0.1
-    p = mc.forward_expm(dt)
-
-    M = 200
+    M = 100
     err = np.zeros((M,1))
     for k in range(0,M):
         p0 = np.ones((1, D)).flatten()
@@ -66,52 +63,19 @@ if __name__ == '__main__':
     plt.show()
 
 
-    times = np.array([0 ,T])
-    sol = mc.backward_ode(times,p0)
-    y = sol.y
-    t = sol.t
-    plt.figure(1)
-    plt.plot(t, y[0, :])
-    plt.plot(t, y[1, :])
-    plt.plot(t, y[2, :])
-    plt.show()
 
+    times = np.array([0,3,5, 10,15,18])
+    z = np.random.gamma(shape =1.0,scale=1.0,size=(D,6))
 
-    times = np.array([0 ,T])
-    sol = mc.forward_ode(times)
-    y = sol.y
-    t = sol.t
-    plt.figure(2)
-    plt.plot(t, y[0, :])
-    plt.plot(t, y[1, :])
-    plt.plot(t, y[2, :])
-    plt.show()
-
-   # times = np.array([0,3,5, 10,15,18])
-   # z = np.random.gamma(shape =1.0,scale=1.0,size=(5,6))
-    mc.rand_init()
-    z = mc.sample()
-
-    t_lh = np.array([0])
-    t0 = 0
-    lh = np.ones((mc.dims, len(z)))
-    p = 0.8
-    for i in range(0, len(z)):
-        t0 = t0 + z[i][0]
-        if np.random.uniform(low=0, high=1) < p:
-            t_lh = np.concatenate((t_lh, t0 * np.ones((1))))
-            for j in range(0, mc.dims):
-                lh[j, i] = obs_lh(z[i][1], j) + 0.001
-
-    (rho,t_rho) = mc.backward_ode_post(t_lh, lh)
+    (rho,t_rho) = mc.backward_ode_post(times, z)
     sol = mc.forward_ode_post(t_rho,rho)
     y = sol.y
     t_y = sol.t
 
-    plt.figure(1)
-    plt.plot(t_rho,rho[0,:])
-    plt.plot(t_rho,rho[1,:])
-    plt.figure(2)
+    f = np.divide(rho[0,:],rho[1,:])
+    plt.figure(3)
+    plt.plot(t_rho,f)
+    plt.figure(4)
     plt.plot(t_y, y[0, :])
     plt.plot(t_y, y[1, :])
 
@@ -123,10 +87,7 @@ if __name__ == '__main__':
     M = 100
     err = np.zeros((M, 1))
     for k in range(0, M):
-        p0 = np.ones((1, D)).flatten()
-        p0[np.random.randint(low=0, high=D)] = 0
-        p0 = p0 / sum(p0)
-        mc.set_init(p0)
+        mc.rand_init()
         z = mc.sample()
 
         t_lh = np.array([0])
@@ -145,19 +106,20 @@ if __name__ == '__main__':
         sol = mc.forward_ode_post_marginal(t_rho, rho)
         y = sol.y
         t_y = sol.t
+
+
+
         mc.update_estatistics(y, t_y, rho, t_rho,a)
         mc.estimate_Q()
-        print(mc.trans)
-        print(mc.dwell)
-        plt.figure(3)
-        plt.plot(t_y,y[0,:])
-        plt.show()
+
         a = copy.copy(mc.Q_estimate)
         b = copy.copy(mc.Q)
-        print(a)
-        print(b)
-        print(np.linalg.norm(a - b))
-        err[k] = np.linalg.norm(a - b)
+        a0 = copy.deepcopy(mc.Q_estimate)
+        b = copy.copy(mc.Q)
+        np.fill_diagonal(a0, 0)
+        np.fill_diagonal(b, 0)
+        print(np.linalg.norm(a0 - b))
+        err[k] = np.linalg.norm(a0 - b)
 
     plt.figure(11)
     plt.plot(err)

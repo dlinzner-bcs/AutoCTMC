@@ -58,7 +58,7 @@ class ctmc():
     def forward_ode(self, t):
         Q = self.Q
         def mastereq(t, x):
-            dxdt =  np.dot(x,Q)
+            dxdt =  np.dot(np.transpose(Q),x)
             return dxdt
         sol = solve_ivp(mastereq, t,self.p0,dense_output=True)
         return sol
@@ -70,17 +70,25 @@ class ctmc():
             for i in range(0,self.dims):
                 for j in range(0, self.dims):
                     if t<=np.max(t_rho):
-                        f = interp1d(t_rho, rho[i,:])
-                        g = interp1d(t_rho, rho[j,:])
-                        fac = (g(t)+epsilon)/(f(t)+epsilon)
+                        #f = interp1d(t_rho, rho[i,:])
+                        #g = interp1d(t_rho, rho[j,:])
+                        #fac = (g(t)+epsilon)/(f(t)+epsilon)
+                        result = np.where(t_rho <= t)
+                        f = rho[i, result[0][0]]
+                        g = rho[j, result[0][0]]
+                        fac = (g + epsilon) / (f + epsilon)
                     else:
                         fac = 1
                     Q_eff[i,j] = Q[i,j]*fac
                 Q_eff[i,i]=0
                 Q_eff[i,i]=-sum(Q_eff[i,:])
-            dxdt =  np.dot(x,Q_eff)
+            dxdt = np.dot(np.transpose(Q_eff), x)
             return dxdt
-        sol = solve_ivp(lambda t, y: mastereq_t(t,y), [0, self.T], self.p0, dense_output=True)
+
+        n_span = np.ceil(self.T / self.dt)
+        np.ceil(n_span)
+        t_span = np.linspace(0, self.T, int(n_span))
+        sol = solve_ivp(lambda t, y: mastereq_t(t,y), [0, self.T], self.p0,t_eval=t_span, dense_output=True)
         return sol
 
     def forward_ode_post_marginal(self,t_rho,rho):
@@ -104,7 +112,7 @@ class ctmc():
                     Q_eff[i,j] = Q[i,j]*fac
                 Q_eff[i,i]=0
                 Q_eff[i,i]=-sum(Q_eff[i,:])
-            dxdt =  np.dot(x,Q_eff)
+            dxdt =  np.dot(np.transpose(Q_eff),x)
             return dxdt
 
         n_span = np.ceil(self.T / self.dt)
@@ -128,7 +136,7 @@ class ctmc():
     def backward_ode_marginal(self, t,rho0):
         Q = self.Q_estimate
         def mastereq_bwd(t, x):
-            dxdt = np.dot(Q,x)
+            dxdt = np.dot(x,np.transpose(Q))
             return dxdt
         n_span = np.ceil((t[1]-t[0])/self.dt)
         np.ceil(n_span)
@@ -139,7 +147,7 @@ class ctmc():
     def backward_ode_post(self, t,z):
         T = self.T
 
-        t = np.concatenate((t, T*np.ones((1))))+1
+        t = np.concatenate((t, T*np.ones((1))))
         z = np.concatenate((z, np.ones((self.dims,1))), axis=1)
         rho0 = np.ones((1,self.dims)).flatten()
         rho  = np.ones((self.dims,1))
@@ -157,7 +165,7 @@ class ctmc():
     def backward_ode_post_marginal(self, t,z):
         T = self.T
 
-        t = np.concatenate((t, T*np.ones((1))))+1
+        t = np.concatenate((t, T*np.ones((1))))
         z = np.concatenate((z, np.ones((self.dims,1))), axis=1)
         rho0 = np.ones((1,self.dims)).flatten()
         rho  = np.ones((self.dims,1))
@@ -226,7 +234,8 @@ class ctmc():
         for i in range(0, self.dims):
             eT[i] = np.trapz(y[i,:],t_y)
             for j in range(0, self.dims):
-                f = np.multiply(y[i,:],np.divide(rho[j,0:len(y[i,:])],rho[i,0:len(y[i,:])]))
+                g = np.divide(rho[j,0:len(y[i,:])],rho[i,0:len(y[i,:])])
+                f = np.multiply(y[i,:],g)
                 eM[i,j] = Q[i,j]*np.trapz(f,t_y)
         return eT,eM
 
@@ -251,7 +260,6 @@ class ctmc():
             Q_estimate[i, i] = -sum(Q_estimate[i, :])
         self.Q_estimate = Q_estimate
         return None
-
 
 
     def set_init(self,p0):
