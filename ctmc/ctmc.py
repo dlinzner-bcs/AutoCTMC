@@ -1,8 +1,11 @@
 import numpy as np
 import scipy.linalg as spl
 from scipy.integrate import solve_ivp
+from scipy.integrate import quad
 from scipy.interpolate import interp1d
 import copy
+
+epsilon = 0.000001
 
 class ctmc():
     """
@@ -14,7 +17,7 @@ class ctmc():
     Q   = intensity matrix
     p0  = inital state
     """
-    def __init__(self, Q,p0,T):
+    def __init__(self, Q,p0,alpha,beta,T):
         super().__init__()
         self.T    = T
         self.dims = p0.shape[0]
@@ -31,6 +34,13 @@ class ctmc():
         except AssertionError:
             raise ValueError('invalid initial state. try normalizing')
         self.p0   = p0
+
+        self.alpha = alpha
+        self.beta  = beta
+
+        self.trans = np.zeros((self.dims,self.dims))
+        self.dwell = np.zeros((self.dims,1))
+        self.Q_estimate = np.zeros((self.dims,self.dims))
 
     def emit(self, func, **kwargs):
         func(self, **kwargs)  ## added self here
@@ -61,7 +71,7 @@ class ctmc():
                     if t<=np.max(t_rho):
                         f = interp1d(t_rho, rho[i,:])
                         g = interp1d(t_rho, rho[j,:])
-                        fac = (g(t)+0.01)/(f(t)+0.01)
+                        fac = (g(t)+epsilon)/(f(t)+epsilon)
                     else:
                         fac = 1
                     Q_eff[i,j] = Q[i,j]*fac
@@ -127,3 +137,52 @@ class ctmc():
             if i < len(z) - 1:
                 M[z[i][1],z[i+1][1]] = M[z[i][1],z[i+1][1]] + 1
         return T,M
+
+    def expected_statistics(self, y,t_y,rho,t_rho):
+        eT = np.zeros((self.dims,1))
+        eM = np.zeros((self.dims,self.dims))
+
+        Q = self.Q
+
+        def M_t(t,x):
+            if t <= np.max(t_rho):
+                f = interp1d(t_rho, rho[i, :])
+                g = interp1d(t_rho, rho[j, :])
+                h = f = interp1d(t_y, y[i, :])
+                fac = h(t) * ((g(t) + epsilon) / (f(t) + epsilon))
+            else:
+                fac = 1
+            Q_eff = x * fac
+            return Q_eff
+
+        for i in range(0, self.dims):
+            eT[i] = np.trapz(y[i,:],t_y)
+            for j in range(0, self.dims):
+                eM[i,j] = quad(M_t, 0, self.T,args=(Q[i,j]))[0]
+        return eT,eM
+
+    def update_statistics(self, z):
+        T,M = self.statistics(z)
+        self.trans = self.trans + M
+        self.dwell = self.dwell + T
+        return None
+
+    def update_estatistics(self, y,t_y,rho,t_rho):
+        eT,eM = self.expected_statistics(y,t_y,rho,t_rho)
+        self.trans = self.trans + eM
+        self.dwell = self.dwell + eT
+        return None
+
+    def estimate_Q(self):
+        Q_estimate = np.zeros((self.dims,self.dims))
+        for i in range(0,self.dims):
+            for j in range(0, self.dims):
+                Q_estimate[i,j] = (self.trans[i,j]+self.alpha)/(self.dwell[i]+self.beta)
+        self.Q_estimate = Q_estimate
+        return None
+
+
+
+    def set_init(self,p0):
+        self.p0 = p0
+        return None

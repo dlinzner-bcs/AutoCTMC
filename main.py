@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ctmc.ctmc import ctmc
 from scipy.stats import norm
-
+import copy
 
 def obs(x):
     y = np.random.normal(loc = x,scale = 1)
@@ -16,6 +16,8 @@ def obs_lh(x,mu):
 if __name__ == '__main__':
     T = 21
     D = 5
+    alpha = 1
+    beta  = 1
     Q = np.random.gamma(shape =1.0,scale=1.0,size=(D,D))
     for i in range(0,D):
         Q[i,i] = 0
@@ -23,7 +25,7 @@ if __name__ == '__main__':
     p0 = np.ones((1,D)).flatten()
     p0[0] = 0
     p0 = p0/sum(p0)
-    mc = ctmc(Q,p0,T)
+    mc = ctmc(Q,p0,alpha,beta,T)
 
     z = mc.sample()
     t_lh = np.array([0])
@@ -43,8 +45,25 @@ if __name__ == '__main__':
     dt = 0.1
     p = mc.forward_expm(dt)
 
+    M = 200
+    err = np.zeros((M,1))
+    for k in range(0,M):
+        p0 = np.ones((1, D)).flatten()
+        p0[np.random.randint(low=0,high=D)] = 0
+        p0 = p0 / sum(p0)
+        mc.set_init(p0)
+        z = mc.sample()
+        mc.update_statistics(z)
+        mc.estimate_Q()
+        a = copy.copy(mc.Q_estimate)
+        b = copy.copy(mc.Q)
+        np.fill_diagonal(a,0)
+        np.fill_diagonal(b, 0)
+        err[k] = np.linalg.norm(a-b)
+    plt.figure(10)
+    plt.plot(err)
+    plt.show()
 
-    z = mc.sample()
 
     times = np.array([0 ,T])
     sol = mc.backward_ode(times,p0)
@@ -71,23 +90,17 @@ if __name__ == '__main__':
 
    # times = np.array([0,3,5, 10,15,18])
    # z = np.random.gamma(shape =1.0,scale=1.0,size=(5,6))
-    (y,t) = mc.backward_ode_post(t_lh, lh)
+    (rho,t_rho) = mc.backward_ode_post(t_lh, lh)
 
-    plt.figure(3)
-    plt.plot(t,y[0, :])
-    plt.plot(t,y[1, :])
-    plt.plot(t,y[2, :])
-    plt.plot(t,y[3, :])
-    plt.show()
+
 
 
     sol = mc.forward_ode_post(t,y)
     y = sol.y
-    t = sol.t
-    plt.figure(4)
-    plt.plot(t,y[0, :])
-    plt.plot(t,y[1, :])
-    plt.plot(t,y[2, :])
-    plt.plot(t,y[3, :])
-    plt.plot(t, np.sum(y,axis=0))
-    plt.show()
+    t_y = sol.t
+
+
+    eT,eM = mc.expected_statistics( y, t_y, rho, t_rho)
+    mc.update_estatistics(y, t_y, rho, t_rho)
+    print(eT)
+    print(eM)
