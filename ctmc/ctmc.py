@@ -55,12 +55,12 @@ class ctmc():
         p = np.dot(U, self.p0)
         return p
 
-    def forward_ode(self, t):
+    def forward_ode(self):
         Q = self.Q
         def mastereq(t, x):
-            dxdt =  np.dot(np.transpose(Q),x)
+            dxdt =  np.dot(x,Q)
             return dxdt
-        sol = solve_ivp(mastereq, t,self.p0,dense_output=True)
+        sol = solve_ivp(mastereq, [0,self.T],self.p0,dense_output=True)
         return sol
 
     def forward_ode_post(self,t_rho,rho):
@@ -73,7 +73,7 @@ class ctmc():
                         #f = interp1d(t_rho, rho[i,:])
                         #g = interp1d(t_rho, rho[j,:])
                         #fac = (g(t)+epsilon)/(f(t)+epsilon)
-                        result = np.where(t_rho <= t)
+                        result = np.where((t-self.dt <t_rho)*(t_rho<=t+self.dt))
                         f = rho[i, result[0][0]]
                         g = rho[j, result[0][0]]
                         fac = (g + epsilon) / (f + epsilon)
@@ -82,7 +82,7 @@ class ctmc():
                     Q_eff[i,j] = Q[i,j]*fac
                 Q_eff[i,i]=0
                 Q_eff[i,i]=-sum(Q_eff[i,:])
-            dxdt = np.dot(np.transpose(Q_eff), x)
+            dxdt = np.dot(x,Q_eff)
             return dxdt
 
         n_span = np.ceil(self.T / self.dt)
@@ -94,31 +94,31 @@ class ctmc():
     def forward_ode_post_marginal(self,t_rho,rho):
         Q = self.Q_estimate
         Q_eff = copy.copy(Q)
-        p0 = np.ones((1,self.dims)).flatten()
+        p0 = np.ones((self.dims,1)).flatten()
         p0 = p0/sum(p0)
+
         def mastereq_t(t, x):
             for i in range(0,self.dims):
                 for j in range(0, self.dims):
-                    if t<=np.max(t_rho):
-                       f0 = interp1d(t_rho, rho[i,:])
-                       # g = interp1d(t_rho, rho[j,:])
-                       # fac = (g(t)+epsilon)/(f(t)+epsilon)
-                       result = np.where(t_rho <= t)
-                       f = rho[i, result[0][0]]
-                       g = rho[j, result[0][0]]
-                       fac = ((g + epsilon) / (f + epsilon))
-                    else:
-                        fac = 1
+                    try:
+                        result = np.where((t-self.dt <t_rho)*(t_rho<=t+self.dt))
+                        f = rho[i, result[0][0]]
+                        g = rho[j, result[0][0]]
+                        fac = ((g + epsilon) / (f + epsilon))
+                    except:
+                        fac =1
+
                     Q_eff[i,j] = Q[i,j]*fac
+
                 Q_eff[i,i]=0
                 Q_eff[i,i]=-sum(Q_eff[i,:])
-            dxdt =  np.dot(np.transpose(Q_eff),x)
+            dxdt =  np.dot(x,Q_eff)
             return dxdt
 
         n_span = np.ceil(self.T / self.dt)
         np.ceil(n_span)
         t_span = np.linspace(0, self.T, int(n_span))
-        sol = solve_ivp(lambda t, y: mastereq_t(t,y), [0, self.T], p0,t_eval=t_span, dense_output=True)
+        sol = solve_ivp(lambda t, y: mastereq_t(t,y), [0, self.T], y0 = p0,t_eval=t_span, dense_output=True)
         return sol
 
     def backward_ode(self, t,rho0):
@@ -127,7 +127,7 @@ class ctmc():
             dxdt = np.dot(Q,x)
             return dxdt
 
-        n_span = (t[1] - t[0]) / self.dt
+        n_span = np.ceil((t[1]-t[0])/self.dt)
         np.ceil(n_span)
         t_span = np.linspace(np.asscalar(t[0]), np.asscalar(t[1]), int(n_span))
         sol = solve_ivp(mastereq_bwd, t,rho0,t_eval=t_span,dense_output=True)
@@ -136,9 +136,9 @@ class ctmc():
     def backward_ode_marginal(self, t,rho0):
         Q = self.Q_estimate
         def mastereq_bwd(t, x):
-            dxdt = np.dot(x,np.transpose(Q))
+            dxdt = np.dot(Q,x)
             return dxdt
-        n_span = np.ceil((t[1]-t[0])/self.dt)
+        n_span = (np.ceil((t[1]-t[0])/self.dt))
         np.ceil(n_span)
         t_span = np.linspace(np.asscalar(t[0]),np.asscalar(t[1]),int(n_span))
         sol = solve_ivp(mastereq_bwd, t,rho0,t_eval=t_span,dense_output=True)
@@ -146,39 +146,51 @@ class ctmc():
 
     def backward_ode_post(self, t,z):
         T = self.T
-
         t = np.concatenate((t, T*np.ones((1))))
         z = np.concatenate((z, np.ones((self.dims,1))), axis=1)
         rho0 = np.ones((1,self.dims)).flatten()
         rho  = np.ones((self.dims,1))
         times = np.ones((1,))
-        for i in range(0,t.shape[0]-1):
-           ti = np.array([T-t[i+1],T-t[i]])
+
+        t_max = t.shape[0]-1
+
+        for i in range(0,t_max+1):
+
+           b = (t_max-i-1>=0)*(t[t_max-i-1])
+           ti = np.array([T-t[t_max-i],T-b])
+
            f = self.backward_ode(ti,rho0)
            assert f.status == 0
-           rho0 = np.multiply(f.y[:,-1],z[:,i]).flatten()
+           rho0 = np.multiply(f.y[:,-1],z[:,t_max-i-1]).flatten()
            rho0 = rho0/sum(rho0)
            rho = np.concatenate((rho,f.y),axis = 1)
-           times = np.concatenate((times, np.flip(f.t,axis=0)), axis=0)
-        return (np.delete(rho,0,axis=1),np.delete(times,0,axis=0))
+           times = np.concatenate((times, f.t), axis=0)
+        times  = np.delete(times,0,axis=0)
+        rho    = np.flip(np.delete(rho,0,axis=1),axis=1)
+        return (rho,times)
 
     def backward_ode_post_marginal(self, t,z):
         T = self.T
-
-        t = np.concatenate((t, T*np.ones((1))))
-        z = np.concatenate((z, np.ones((self.dims,1))), axis=1)
-        rho0 = np.ones((1,self.dims)).flatten()
-        rho  = np.ones((self.dims,1))
+        t = np.concatenate((t, T * np.ones((1))))
+        z = np.concatenate((z, np.ones((self.dims, 1))), axis=1)
+        rho0 = np.ones((1, self.dims)).flatten()
+        rho = np.ones((self.dims, 1))
         times = np.ones((1,))
-        for i in range(0,t.shape[0]-1):
-           ti = np.array([T-t[i+1],T-t[i]])
-           f = self.backward_ode_marginal(ti,rho0)
-           assert f.status == 0
-           rho0 = np.multiply(f.y[:,-1],z[:,i]).flatten()
-           rho0 = rho0/sum(rho0)
-           rho = np.concatenate((rho,f.y),axis = 1)
-           times = np.concatenate((times, np.flip(f.t,axis=0)), axis=0)
-        return (np.delete(rho,0,axis=1),np.delete(times,0,axis=0))
+
+        t_max = t.shape[0] - 1
+
+        for i in range(0, t_max + 1):
+            b = (t_max - i - 1 >= 0) * (t[t_max - i - 1])
+            ti = np.array([T - t[t_max - i], T - b])
+            f = self.backward_ode_marginal(ti, rho0)
+            assert f.status == 0
+            rho0 = np.multiply(f.y[:, -1], z[:, t_max - i - 1]).flatten()
+            rho0 = rho0 / sum(rho0)
+            rho = np.concatenate((rho, f.y), axis=1)
+            times = np.concatenate((times, f.t), axis=0)
+        times = np.delete(times, 0, axis=0)
+        rho = np.flip(np.delete(rho, 0, axis=1), axis=1)
+        return (rho, times)
 
     def sample(self):
         T = self.T
@@ -190,12 +202,13 @@ class ctmc():
         tau = np.random.exponential(-1/Q[s,s],size=None)
         z   = ((tau,s),)
         t   = t + tau
-        while t <= T:
+        while t < T:
            p    = -Q[s,:]/Q[s,s]
            p[s] = 0
+           p = p/sum(p)
            s    = np.random.multinomial(1,p,size=None)
            s    = sum(s*idx)
-           tau  = np.random.exponential(-1/Q[s, s])
+           tau = np.random.exponential(-1 / Q[s, s])
            t = t + tau
            if t  <= T:
                 z    = z    +   ((tau,s),)
@@ -214,28 +227,14 @@ class ctmc():
         eT = np.zeros((self.dims,1))
         eM = np.zeros((self.dims,self.dims))
 
-        def M_t(t,i,j):
-            result = np.where(t_y <= t)
-            h = y[i, result[0][0]]
-           # h = interp1d(t_y, y[i, :])
-            if t <= np.max(t_rho):
-                result = np.where(t_rho<=t)
-                f = rho[i, result[0][0]]
-                g = rho[j, result[0][0]]
-                #f = interp1d(t_rho, rho[i, :])
-               # g = interp1d(t_rho, rho[j, :])
-                #fac =  ((g(t) + epsilon) / (f(t) + epsilon))
-                fac = ((g + epsilon) / (f + epsilon))
-            else:
-                fac = 1
-            Q_eff = Q[i,j] * fac*h
-            return Q_eff
-
         for i in range(0, self.dims):
             eT[i] = np.trapz(y[i,:],t_y)
             for j in range(0, self.dims):
-                g = np.divide(rho[j,0:len(y[i,:])],rho[i,0:len(y[i,:])])
-                f = np.multiply(y[i,:],g)
+                l = min(len(y[i,:]),len(rho[i,:]))
+                a = rho[j,0:l]
+                b = rho[i,0:l]
+                g = np.divide(a,b)
+                f = np.multiply(y[i,0:l],g)
                 eM[i,j] = Q[i,j]*np.trapz(f,t_y)
         return eT,eM
 
@@ -255,7 +254,9 @@ class ctmc():
         Q_estimate = np.zeros((self.dims,self.dims))
         for i in range(0,self.dims):
             for j in range(0, self.dims):
-                Q_estimate[i,j] = (self.trans[i,j]+self.alpha)/(self.dwell[i]+self.beta)
+                a = self.trans[i,j]+self.alpha*(1+np.random.uniform(low=0, high=0,size=(1)).flatten())
+                b = self.dwell[i]+self.beta*(1+np.random.uniform(low=0, high=0,size=(1)).flatten())
+                Q_estimate[i,j] = a/b
             Q_estimate[i, i] = 0
             Q_estimate[i, i] = -sum(Q_estimate[i, :])
         self.Q_estimate = Q_estimate
@@ -275,4 +276,12 @@ class ctmc():
     def reset_stats(self):
         self.trans = self.trans*0
         self.dwell = self.dwell*0
+        return None
+
+    def process_dat(self,t_lh, lh):
+        (rho, t_rho) = self.backward_ode_post_marginal(t_lh, lh)
+        sol = self.forward_ode_post_marginal(t_rho, rho)
+        y = sol.y
+        t_y = sol.t
+        self.update_estatistics(y, t_y, rho, t_rho, self.Q_estimate)
         return None
