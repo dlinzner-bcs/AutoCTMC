@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ctmc.ctmc import ctmc
 from scipy.stats import norm
+from scipy.optimize import minimize
 import copy
 
 def obs(x):
@@ -64,13 +65,45 @@ def gen_obs_M(mc,M,K):
         z_full.append(z0)
     return z_full
 
+def emit_obs_M_norm(mc,M,K):
+
+    z_full = []
+    for k in range(0,K):
+        mc.rand_init()
+        z = mc.sample()
+
+        t0 = 0
+        for i in range(0, len(z)):
+            t0 = t0 + z[i][0]
+        u = np.sort(np.random.uniform(low=0, high=t0, size=(M,1)).flatten())
+
+        y = np.ones((M))
+        t_lh = np.zeros((M))
+        n = 0
+
+        t0 = 0
+        for i in range(0, len(z)):
+            tf = t0 + z[i][0]
+            result = np.where((t0<u)*(u<=tf))
+            for k in range(0,len(result[0])):
+                for j in range(0, mc.dims):
+                    y[n] =  obs(z[i][1])
+                t_lh[n] = u[result[0][k]]
+
+                n=n+1
+            t0 = copy.copy(tf)
+        print(t_lh)
+        z0 = (t_lh,y)
+        z_full.append(z0)
+    return z_full
+
 
 if __name__ == '__main__':
     T = 21
     dt = 0.0005
     D = 2
     alpha = 0.1
-    beta  = 0.2
+    beta  = 0.1
     Q = np.random.gamma(shape =1,scale=1.0,size=(D,D))
     for i in range(0,D):
         Q[i,i] = 0
@@ -79,7 +112,13 @@ if __name__ == '__main__':
     p0 = np.ones((1,D)).flatten()
     p0[0] = 0
     p0 = p0/sum(p0)
-    mc = ctmc(Q,p0,alpha,beta,T,dt)
+
+    mu = np.arange(0,D)
+    sig= np.ones((D))*0.1
+    params = (mu,sig)
+    print(params[0][1])
+
+    mc = ctmc(Q,p0,alpha,beta,T,dt,params)
 
     z = mc.sample()
     t_lh = np.array([0])
@@ -126,10 +165,30 @@ if __name__ == '__main__':
     K   = 20
     dat = gen_obs_M(mc, 20, K)
 
-    for m in range(0,M):
-        for k in range(0,K):
-            mc.process_dat(dat[k][0],dat[k][1])
+    # for m in range(0,M):
+    #     for k in range(0,K):
+    #         mc.process_dat(dat[k][0],dat[k][1])
+    #     print(mc.trans)
+    #     print(mc.llh())
+    #     mc.estimate_Q()
+    #     mc.reset_stats()
+    #
+    #     a = copy.deepcopy(mc.Q_estimate)
+    #     b = copy.copy(mc.Q)
+    #     a0 = copy.deepcopy(mc.Q_estimate)
+    #     np.fill_diagonal(a0, 0)
+    #     np.fill_diagonal(b, 0)
+    #     print(a0)
+    #     print(b)
+    #     print(np.linalg.norm(a0 - b))
+    #     err[m] = np.linalg.norm(a0 - b)
 
+    dat = emit_obs_M_norm(mc, 20, K)
+    for m in range(0, M):
+        for k in range(0,K):
+            (llh,y,t_y,rho,t_rho) = mc.process_emissions(dat[k][0],dat[k][1])
+        print(mc.trans)
+        print(llh)
         mc.estimate_Q()
         mc.reset_stats()
 

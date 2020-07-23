@@ -3,6 +3,7 @@ import scipy.linalg as spl
 from scipy.integrate import solve_ivp
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
+from scipy.stats import norm
 import copy
 
 epsilon = 0.000001
@@ -17,7 +18,7 @@ class ctmc():
     Q   = intensity matrix
     p0  = inital state
     """
-    def __init__(self, Q,p0,alpha,beta,T,dt):
+    def __init__(self, Q,p0,alpha,beta,T,dt,params):
         super().__init__()
         self.T    = T
         self.dims = p0.shape[0]
@@ -42,6 +43,16 @@ class ctmc():
         self.dwell = np.zeros((self.dims,1))
         self.Q_estimate = np.zeros((self.dims,self.dims))
         self.dt = dt
+
+        self.params = params
+
+    def set_params(self,params):
+        self.params = params
+        return None
+
+    def dat_lh(self,y,i):
+        pyx = norm.pdf(y, loc=self.params[0][i], scale=self.params[1][i])
+        return pyx
 
     def emit(self, func, **kwargs):
         func(self, **kwargs)  ## added self here
@@ -70,9 +81,6 @@ class ctmc():
             for i in range(0,self.dims):
                 for j in range(0, self.dims):
                     if t<=np.max(t_rho):
-                        #f = interp1d(t_rho, rho[i,:])
-                        #g = interp1d(t_rho, rho[j,:])
-                        #fac = (g(t)+epsilon)/(f(t)+epsilon)
                         result = np.where((t-self.dt <t_rho)*(t_rho<=t+self.dt))
                         f = rho[i, result[0][0]]
                         g = rho[j, result[0][0]]
@@ -285,3 +293,43 @@ class ctmc():
         t_y = sol.t
         self.update_estatistics(y, t_y, rho, t_rho, self.Q_estimate)
         return None
+
+    def process_emissions(self, t_lh, emits):
+
+        lh = np.ones((self.dims,len(t_lh)))
+        for k in range(0,len(t_lh)):
+            for j in range(0,self.dims):
+                lh[j,k] = self.dat_lh(emits[k],j)+0.01
+
+        (rho, t_rho) = self.backward_ode_post_marginal(t_lh, lh)
+        sol = self.forward_ode_post_marginal(t_rho, rho)
+        y = sol.y
+        t_y = sol.t
+        self.update_estatistics(y, t_y, rho, t_rho, self.Q_estimate)
+
+        llh = self.llh() - self.llh_dat(t_lh,emits,y,t_y)
+
+        return (llh,y,t_y,rho,t_rho)
+
+    def llh(self):
+        q = self.Q_estimate
+        lnq = copy.copy(q)
+        np.fill_diagonal(lnq,1)
+        lnq = np.log(lnq)
+
+        E_T = np.sum(np.multiply(self.dwell,q))
+        E_M = np.sum(np.multiply(self.trans, lnq))
+
+        llh = E_M-E_T
+        return llh
+
+    def llh_dat(self,t_lh,emits,y,ty):
+        llh_dat = 0
+        for k in range(0, len(t_lh)):
+            t = t_lh[k]
+            result = np.where((t - self.dt <ty) * (ty <= t + self.dt))
+            for j in range(0, self.dims):
+                llh_dat = llh_dat + np.log(self.dat_lh(emits[k], j))*y[j,result[0][0]]
+        return llh_dat
+
+
