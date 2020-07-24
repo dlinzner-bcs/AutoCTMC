@@ -4,6 +4,7 @@ from scipy.integrate import solve_ivp
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
 from scipy.stats import norm
+from scipy.optimize import minimize
 import copy
 
 epsilon = 0.000001
@@ -357,6 +358,19 @@ class ctmc():
                 for j in range(0, self.dims):
                     llh_dat = llh_dat + np.log(self.dat_lh(emits[k], j))*y[j,result[0][0]]
         return llh_dat
+
+    def update_obs_model(self,sols,dat):
+        def mu_max(x):
+            mc0 =copy.copy(self)
+            params = (x,self.params[1])
+            mc0.params = params
+            llh = mc0.llh_dat_full(sols, dat)
+            return -llh
+        res = minimize(mu_max,x0 = self.params[0],method='Nelder-Mead', tol=1e-6)
+        x = res.x
+        params = (x, self.params[1])
+        self.params = params
+        return None
 
 
 

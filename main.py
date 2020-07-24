@@ -184,17 +184,17 @@ if __name__ == '__main__':
     dat = emit_obs_M_norm(mc, 5, K)
     for m in range(0, M):
         llh, sols = mc.process_emissions(dat)
-
-        def mu_max(x):
-            mc0 =copy.copy(mc)
-            params = (x,mc.params[1])
-            mc0.params = params
-            llh = mc0.llh_dat_full(sols, dat)
-            return -llh
-        res = minimize(mu_max,x0 = mc.params[0],method='Nelder-Mead', tol=1e-6)
-        x = res.x
-        params = (x, mc.params[1])
-        mc.params = params
+        mc.update_obs_model(sols, dat)
+        # def mu_max(x):
+        #     mc0 =copy.copy(mc)
+        #     params = (x,mc.params[1])
+        #     mc0.params = params
+        #     llh = mc0.llh_dat_full(sols, dat)
+        #     return -llh
+        # res = minimize(mu_max,x0 = mc.params[0],method='Nelder-Mead', tol=1e-6)
+        # x = res.x
+        # params = (x, mc.params[1])
+        # mc.params = params
         print(mc.params[0])
 
         mc.estimate_Q()
