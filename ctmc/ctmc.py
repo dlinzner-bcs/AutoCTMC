@@ -296,7 +296,6 @@ class ctmc():
         return None
 
     def process_emission(self, t_lh, emits):
-
         lh = np.ones((self.dims,len(t_lh)))
         for k in range(0,len(t_lh)):
             for j in range(0,self.dims):
@@ -364,7 +363,8 @@ class ctmc():
             mc0 =copy.copy(self)
             params = (x,self.params[1])
             mc0.params = params
-            llh = mc0.llh_dat_full(sols, dat)
+            a = np.min(abs(np.diff(np.array([x]))))
+            llh = mc0.llh_dat_full(sols, dat) -10/(a+0.001)
             return -llh
         res = minimize(mu_max,x0 = self.params[0],method='Nelder-Mead', tol=1e-6)
         x = res.x

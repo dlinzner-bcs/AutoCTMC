@@ -13,7 +13,6 @@ def obs_lh(x,mu):
     y = obs(x)
     pyx = norm.pdf(y,loc = mu, scale = 0.1)
     return pyx
-
 def gen_obs(mc,p,K):
     z_full = []
     for k in range(0,K):
@@ -32,7 +31,6 @@ def gen_obs(mc,p,K):
         z0 = (t_lh,lh)
         z_full.append(z0)
     return z_full
-
 def gen_obs_M(mc,M,K):
 
     z_full = []
@@ -64,7 +62,6 @@ def gen_obs_M(mc,M,K):
         z0 = (t_lh,lh)
         z_full.append(z0)
     return z_full
-
 def emit_obs_M_norm(mc,M,K):
 
     z_full = []
@@ -114,14 +111,14 @@ if __name__ == '__main__':
     p0 = p0/sum(p0)
 
     mu = np.arange(0,D)*1/2
-    sig= np.ones((D))*0.1
+    sig= np.ones((D))*0.2
     params = (mu,sig)
     mc = ctmc(Q,p0,alpha,beta,T,dt,params)
 
 #generate data
 
     M = 100
-    K   = 20
+    K   = 50
     dat = gen_obs_M(mc, 20, K)
 
 #estimate rate matrix and obs model (only means atm)
@@ -145,7 +142,8 @@ if __name__ == '__main__':
         np.fill_diagonal(a0, 0)
         np.fill_diagonal(b, 0)
         # mse of rate matrix estimate
-        print(np.linalg.norm(a0 - b))
+        print(a0)
+        print(b)
 
 
 
