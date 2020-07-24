@@ -14,3 +14,4 @@ Tested with Python 3.7
 - Learning likelihood model (unsupervised learning latentstate-> data) in Gaussian param. family
 ### TODO
 - Add non-parametric likelihood model (VAE, neural Gaussian mixture,...)
+- Extend to multi-variate processes (CTBNs)
