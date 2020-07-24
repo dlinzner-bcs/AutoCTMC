@@ -60,7 +60,7 @@ def gen_obs_M(mc,M,K):
 
                 n=n+1
             t0 = copy.copy(tf)
-        print(t_lh)
+
         z0 = (t_lh,lh)
         z_full.append(z0)
     return z_full
@@ -92,7 +92,6 @@ def emit_obs_M_norm(mc,M,K):
 
                 n=n+1
             t0 = copy.copy(tf)
-        print(t_lh)
         z0 = (t_lh,y)
         z_full.append(z0)
     return z_full
@@ -108,12 +107,11 @@ if __name__ == '__main__':
     for i in range(0,D):
         Q[i,i] = 0
         Q[i, i] = -sum(Q[i, :])
-    print(Q)
     p0 = np.ones((1,D)).flatten()
     p0[0] = 0
     p0 = p0/sum(p0)
 
-    mu = np.arange(0,D)
+    mu = np.arange(0,D)*1/2
     sig= np.ones((D))*0.1
     params = (mu,sig)
     print(params[0][1])
@@ -183,13 +181,24 @@ if __name__ == '__main__':
     #     print(np.linalg.norm(a0 - b))
     #     err[m] = np.linalg.norm(a0 - b)
 
-    dat = emit_obs_M_norm(mc, 20, K)
+    dat = emit_obs_M_norm(mc, 5, K)
     for m in range(0, M):
-        for k in range(0,K):
-            (llh,y,t_y,rho,t_rho) = mc.process_emissions(dat[k][0],dat[k][1])
-        print(mc.trans)
-        print(llh)
+        llh, sols = mc.process_emissions(dat)
+
+        def mu_max(x):
+            mc0 =copy.copy(mc)
+            params = (x,mc.params[1])
+            mc0.params = params
+            llh = mc0.llh_dat_full(sols, dat)
+            return -llh
+        res = minimize(mu_max,x0 = mc.params[0],method='Nelder-Mead', tol=1e-6)
+        x = res.x
+        params = (x, mc.params[1])
+        mc.params = params
+        print(mc.params[0])
+
         mc.estimate_Q()
+
         mc.reset_stats()
 
         a = copy.deepcopy(mc.Q_estimate)
@@ -197,8 +206,6 @@ if __name__ == '__main__':
         a0 = copy.deepcopy(mc.Q_estimate)
         np.fill_diagonal(a0, 0)
         np.fill_diagonal(b, 0)
-        print(a0)
-        print(b)
         print(np.linalg.norm(a0 - b))
         err[m] = np.linalg.norm(a0 - b)
 

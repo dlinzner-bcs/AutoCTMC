@@ -294,7 +294,7 @@ class ctmc():
         self.update_estatistics(y, t_y, rho, t_rho, self.Q_estimate)
         return None
 
-    def process_emissions(self, t_lh, emits):
+    def process_emission(self, t_lh, emits):
 
         lh = np.ones((self.dims,len(t_lh)))
         for k in range(0,len(t_lh)):
@@ -307,9 +307,20 @@ class ctmc():
         t_y = sol.t
         self.update_estatistics(y, t_y, rho, t_rho, self.Q_estimate)
 
-        llh = self.llh() - self.llh_dat(t_lh,emits,y,t_y)
+        llh = self.llh() + self.llh_dat(t_lh,emits,y,t_y)
 
         return (llh,y,t_y,rho,t_rho)
+
+    def process_emissions(self,dat):
+        K = len(dat)
+
+        llh_full = 0
+        sols = []
+        for k in range(0, K):
+            (llh, y, t_y, rho, t_rho) = self.process_emission(dat[k][0], dat[k][1])
+            llh_full = llh_full +llh
+            sols.append((y,t_y))
+        return llh_full ,sols
 
     def llh(self):
         q = self.Q_estimate
@@ -331,5 +342,22 @@ class ctmc():
             for j in range(0, self.dims):
                 llh_dat = llh_dat + np.log(self.dat_lh(emits[k], j))*y[j,result[0][0]]
         return llh_dat
+
+    def llh_dat_full(self,sols,dat):
+        M = len(sols)
+        llh_dat = 0
+        for m in range(0,M):
+            t_lh = dat[m][0]
+            emits= dat[m][1]
+            t_y  = sols[m][1]
+            y    = sols[m][0]
+            for k in range(0, len(t_lh)):
+                t = t_lh[k]
+                result = np.where((t - self.dt <t_y) * (t_y <= t + self.dt))
+                for j in range(0, self.dims):
+                    llh_dat = llh_dat + np.log(self.dat_lh(emits[k], j))*y[j,result[0][0]]
+        return llh_dat
+
+
 
 
