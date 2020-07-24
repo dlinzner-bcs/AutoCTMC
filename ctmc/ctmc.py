@@ -1,13 +1,11 @@
 import numpy as np
 import scipy.linalg as spl
 from scipy.integrate import solve_ivp
-from scipy.integrate import quad
-from scipy.interpolate import interp1d
 from scipy.stats import norm
 from scipy.optimize import minimize
 import copy
 
-epsilon = 0.000001
+epsilon = 0.000001 #prevent numerical issues if likelihoods become to small
 
 class ctmc():
     """
@@ -18,9 +16,18 @@ class ctmc():
     ----------
     Q   = intensity matrix
     p0  = inital state
+    alpha = hyperparam transitions
+    beta  = hyper pram waiting time
+    T     = Boundary time evolution
+    dt    = time step
+    params= parameters of observation model
     """
     def __init__(self, Q,p0,alpha,beta,T,dt,params):
         super().__init__()
+        try:
+            assert T>0
+        except AssertionError:
+            raise ValueError('invalid max time. time can not be negative.')
         self.T    = T
         self.dims = p0.shape[0]
         try:
@@ -52,6 +59,7 @@ class ctmc():
         return None
 
     def dat_lh(self,y,i):
+        # observation model as likelihood of emission y under state i
         pyx = norm.pdf(y, loc=self.params[0][i], scale=self.params[1][i])
         return pyx
 
@@ -60,14 +68,17 @@ class ctmc():
         return self
 
     def compute_propagator(self, dt):
+        # compute propagator via matrix exponential
         return spl.expm(self.Q * dt)
 
     def forward_expm(self, dt):
+        # solve forward ode with gt rate via matrix exponential
         U = self.compute_propagator(dt)
         p = np.dot(U, self.p0)
         return p
 
     def forward_ode(self):
+        # solve forward ode with gt rate
         Q = self.Q
         def mastereq(t, x):
             dxdt =  np.dot(x,Q)
@@ -76,6 +87,10 @@ class ctmc():
         return sol
 
     def forward_ode_post(self,t_rho,rho):
+        """
+        solve forward ode with gt rate
+        for bwd solution t_rho,rho
+        """
         Q = self.Q
         Q_eff = copy.copy(Q)
         def mastereq_t(t, x):
@@ -101,6 +116,10 @@ class ctmc():
         return sol
 
     def forward_ode_post_marginal(self,t_rho,rho):
+        """
+        solve forward ode with current rate estimate
+        for bwd solution t_rho,rho
+        """
         Q = self.Q_estimate
         Q_eff = copy.copy(Q)
         p0 = np.ones((self.dims,1)).flatten()
@@ -131,6 +150,10 @@ class ctmc():
         return sol
 
     def backward_ode(self, t,rho0):
+        """
+         solve backward ode with gt rate
+         with one datum t,rho0
+        """
         Q = self.Q
         def mastereq_bwd(t, x):
             dxdt = np.dot(Q,x)
@@ -143,6 +166,10 @@ class ctmc():
         return sol
 
     def backward_ode_marginal(self, t,rho0):
+        """
+         solve backward ode with current rate estimate
+         with one datum t,rho0
+        """
         Q = self.Q_estimate
         def mastereq_bwd(t, x):
             dxdt = np.dot(Q,x)
@@ -154,6 +181,10 @@ class ctmc():
         return sol
 
     def backward_ode_post(self, t,z):
+        """
+         solve backward ode with gt rate
+         for data t,z
+        """
         T = self.T
         t = np.concatenate((t, T*np.ones((1))))
         z = np.concatenate((z, np.ones((self.dims,1))), axis=1)
@@ -179,6 +210,10 @@ class ctmc():
         return (rho,times)
 
     def backward_ode_post_marginal(self, t,z):
+        """
+         solve backward ode with current rate estimate
+         for data t,z
+        """
         T = self.T
         t = np.concatenate((t, T * np.ones((1))))
         z = np.concatenate((z, np.ones((self.dims, 1))), axis=1)
@@ -202,6 +237,9 @@ class ctmc():
         return (rho, times)
 
     def sample(self):
+        """
+         sample path of ctmc
+        """
         T = self.T
         idx = np.arange(0,self.dims)
         Q   = self.Q
@@ -224,6 +262,9 @@ class ctmc():
         return z
 
     def statistics(self, z):
+        """
+         compute statistics of sample path of ctmc
+        """
         T = np.zeros((self.dims,1))
         M = np.zeros((self.dims,self.dims))
         for i in range(0,len(z)):
@@ -233,6 +274,9 @@ class ctmc():
         return T,M
 
     def expected_statistics(self, y,t_y,rho,t_rho,Q):
+        """
+         compute expected statistics of ctmc given posterior marginals
+        """
         eT = np.zeros((self.dims,1))
         eM = np.zeros((self.dims,self.dims))
 
@@ -248,18 +292,27 @@ class ctmc():
         return eT,eM
 
     def update_statistics(self, z):
+        """
+         update statistics
+        """
         T,M = self.statistics(z)
         self.trans = self.trans + M
         self.dwell = self.dwell + T
         return None
 
     def update_estatistics(self, y,t_y,rho,t_rho,Q):
+        """
+         update expected statistics
+        """
         eT,eM = self.expected_statistics(y,t_y,rho,t_rho,Q)
         self.trans = self.trans + eM
         self.dwell = self.dwell + eT
         return None
 
     def estimate_Q(self):
+        """
+         estimate rate
+        """
         Q_estimate = np.zeros((self.dims,self.dims))
         for i in range(0,self.dims):
             for j in range(0, self.dims):
@@ -296,6 +349,18 @@ class ctmc():
         return None
 
     def process_emission(self, t_lh, emits):
+        """
+        process single emission-path
+        input:
+            t_lh = list of time points of emissions
+            emits= list of emissions at time points
+        output:
+            llh = log-likelihood of model
+            y   = posterior marginals
+            t_y = time grid
+            rho = backward solution
+            t_rho = time grid
+        """
         lh = np.ones((self.dims,len(t_lh)))
         for k in range(0,len(t_lh)):
             for j in range(0,self.dims):
@@ -312,6 +377,14 @@ class ctmc():
         return (llh,y,t_y,rho,t_rho)
 
     def process_emissions(self,dat):
+        """
+        process multiple emission-path
+        input :
+        dat = list of emission paths
+        output:
+        llh = log-likelihood of model of all paths
+        sols= tuple of (posterior marginals, time grid)
+        """
         K = len(dat)
 
         llh_full = 0
