@@ -429,7 +429,7 @@ class ctmc():
                 result = np.where((t - self.dt <t_y) * (t_y <= t + self.dt))
                 for j in range(0, self.dims):
                     llh_dat = llh_dat + np.log(self.dat_lh(emits[k], j))*y[j,result[0][0]]
-        return llh_dat
+        return llh_dat/M
 
     def update_obs_model(self,sols,dat):
         def mu_max(x):

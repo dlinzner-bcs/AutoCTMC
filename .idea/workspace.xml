@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f65afb47-f68f-45cd-b385-209289b14fe4" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/environment/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/environment/environment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ctmc/ctmc.py" beforeDir="false" afterPath="$PROJECT_DIR$/ctmc/ctmc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -15,25 +19,35 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="371">
-              <caret line="145" column="16" lean-forward="true" selection-start-line="145" selection-start-column="16" selection-end-line="145" selection-end-column="16" />
+            <state relative-caret-position="404">
+              <caret line="38" column="25" selection-start-line="38" selection-start-column="25" selection-end-line="38" selection-end-column="25" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
-                <element signature="e#174#228#0" />
-                <element signature="e#251#320#0" />
-                <element signature="e#347#868#0" />
-                <element signature="e#859#1555#0" />
-                <element signature="e#1666#2443#0" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/environment/environment.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="115">
+              <caret line="14" column="42" selection-start-line="14" selection-start-column="42" selection-end-line="14" selection-end-column="42" />
+              <folding>
+                <element signature="e#47#84#0" expanded="true" />
+                <element signature="e#63#117#0" />
+                <element signature="e#235#717#0" />
+                <element signature="e#746#1504#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ctmc/ctmc.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="333">
-              <caret line="369" column="45" lean-forward="true" selection-start-line="369" selection-start-column="45" selection-end-line="369" selection-end-column="45" />
+            <state relative-caret-position="236">
+              <caret line="422" column="28" lean-forward="true" selection-start-line="422" selection-start-column="28" selection-end-line="422" selection-end-column="28" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
                 <element signature="e#8583#8923#0" />
@@ -58,13 +72,15 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/test_lh_inference.py" />
-        <option value="$PROJECT_DIR$/main.py" />
+        <option value="$PROJECT_DIR$/environment.py" />
         <option value="$PROJECT_DIR$/ctmc/ctmc.py" />
+        <option value="$PROJECT_DIR$/main.py" />
+        <option value="$PROJECT_DIR$/environment/environment.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="19" />
+    <option name="x" value="357" />
     <option name="y" value="23" />
     <option name="width" value="1541" />
     <option name="height" value="945" />
@@ -84,7 +100,7 @@
             <path>
               <item name="ctmc_nonparametric" type="b2602c69:ProjectViewProjectNode" />
               <item name="ctmc_nonparametric" type="462c0819:PsiDirectoryNode" />
-              <item name="ctmc" type="462c0819:PsiDirectoryNode" />
+              <item name="environment" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -100,6 +116,11 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/environment" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -155,12 +176,12 @@
       <workItem from="1595347611340" duration="811000" />
       <workItem from="1595349018384" duration="10973000" />
       <workItem from="1595419295337" duration="11455000" />
-      <workItem from="1595484855338" duration="36394000" />
+      <workItem from="1595484855338" duration="38017000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="59633000" />
+    <option name="totallyTimeSpent" value="61256000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -172,15 +193,15 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="19" y="23" width="1541" height="945" extended-state="0" />
+    <frame x="357" y="23" width="1541" height="945" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18545698" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18545698" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.3165299" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3165299" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39976552" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -204,7 +225,7 @@
     <option name="version" value="1" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/ctmc_nonparametric$main.coverage" NAME="main Coverage Results" MODIFIED="1595586599820" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ctmc_nonparametric$main.coverage" NAME="main Coverage Results" MODIFIED="1595596609131" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/.gitignore">
@@ -217,28 +238,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/main.py">
+    <entry file="file://$PROJECT_DIR$/ctmc/ctmc.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="371">
-          <caret line="145" column="16" lean-forward="true" selection-start-line="145" selection-start-column="16" selection-end-line="145" selection-end-column="16" />
+        <state relative-caret-position="236">
+          <caret line="422" column="28" lean-forward="true" selection-start-line="422" selection-start-column="28" selection-end-line="422" selection-end-column="28" />
           <folding>
-            <element signature="e#0#37#0" expanded="true" />
-            <element signature="e#174#228#0" />
-            <element signature="e#251#320#0" />
-            <element signature="e#347#868#0" />
-            <element signature="e#859#1555#0" />
-            <element signature="e#1666#2443#0" />
+            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#8583#8923#0" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ctmc/ctmc.py">
+    <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="333">
-          <caret line="369" column="45" lean-forward="true" selection-start-line="369" selection-start-column="45" selection-end-line="369" selection-end-column="45" />
+        <state relative-caret-position="404">
+          <caret line="38" column="25" selection-start-line="38" selection-start-column="25" selection-end-line="38" selection-end-column="25" />
           <folding>
-            <element signature="e#0#18#0" expanded="true" />
-            <element signature="e#8583#8923#0" />
+            <element signature="e#0#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/environment/environment.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="115">
+          <caret line="14" column="42" selection-start-line="14" selection-start-column="42" selection-end-line="14" selection-end-column="42" />
+          <folding>
+            <element signature="e#47#84#0" expanded="true" />
+            <element signature="e#63#117#0" />
+            <element signature="e#235#717#0" />
+            <element signature="e#746#1504#0" />
           </folding>
         </state>
       </provider>
