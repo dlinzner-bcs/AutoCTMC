@@ -2,7 +2,6 @@ from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 from ctmc.ctmc import ctmc
-from scipy.stats import norm
 import copy
 from environment.environment import emit_obs_M_norm
 
@@ -22,7 +21,7 @@ if __name__ == '__main__':
     T = 21 #time window end
     dt = 0.0005 # timestep for simulation
     D = 2 # number of states of ctmc
-    alpha = 0.1 #prior over num of transitions
+    alpha = 0.1 # prior over num of transitions
     beta  = 0.1 # prior dwelling time
 
     #generate random rate matrix

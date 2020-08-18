@@ -22,7 +22,7 @@ class ctmc():
     dt    = time step
     params= parameters of observation model
     """
-    def __init__(self, Q,p0,alpha,beta,T,dt,params):
+    def __init__(self,Q,p0,alpha,beta,T,dt,params):
         super().__init__()
         try:
             assert T>0
@@ -39,7 +39,7 @@ class ctmc():
             raise ValueError('invalid adjacency matrix. try fix by setting consistent diagonals')
         self.Q    = Q
         try:
-            assert sum(p0) == 1
+            assert abs(sum(p0))  > 10^-8
         except AssertionError:
             raise ValueError('invalid initial state. try normalizing')
         self.p0   = p0
