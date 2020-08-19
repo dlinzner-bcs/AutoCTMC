@@ -390,9 +390,12 @@ class ctmc():
         llh_full = 0
         sols = []
         for k in range(0, K):
-            (llh, y, t_y, rho, t_rho) = self.process_emission(dat[k][0], dat[k][1])
-            llh_full = llh_full +llh
-            sols.append((y,t_y))
+            try:
+                (llh, y, t_y, rho, t_rho) = self.process_emission(dat[k][0], dat[k][1])
+                llh_full = llh_full +llh
+                sols.append((y,t_y))
+            except:
+                return None
         return llh_full ,sols
 
     def llh(self):
