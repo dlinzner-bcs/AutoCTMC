@@ -395,7 +395,7 @@ class ctmc():
                 llh_full = llh_full +llh
                 sols.append((y,t_y))
             except:
-                return None
+                print("trajectory %s can not be processed" %k)
         return llh_full ,sols
 
     def llh(self):
