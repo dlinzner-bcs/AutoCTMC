@@ -122,8 +122,9 @@ class ctmc():
         """
         Q = self.Q_estimate
         Q_eff = copy.copy(Q)
-        p0 = np.ones((self.dims,1)).flatten()
-        p0 = p0/sum(p0)
+        #p0 = np.ones((self.dims,1)).flatten()
+       # p0 = p0/sum(p0)
+        p0 = self.p0
 
         def mastereq_t(t, x):
             for i in range(0,self.dims):
